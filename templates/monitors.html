@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <title>Choose a monitor</title>
+    </head>
+    <body class="flex flex-col text-white items-center p-5 font-bold bg-gradient-to-r from-cyan-500 to-blue-500">
+        <h1 class="text-[40px]">Choose a monitor</h1>
+
+        <form class="flex gap-20 h-[80vh] items-center justify-center text-[30px]" method="post" action="./monitors">
+            {% for idx, monitor in monitors %}
+                <label for="monitor-{{ idx }}" class="flex flex-col gap-8 p-8 bg-[#ffffff40] backdrop-blur-md rounded-lg hover:bg-[#ffffff60] hover:cursor-pointer">
+                    <input class="hidden" name="monitor" id="monitor-{{ idx }}" value="{{ idx }}" type="radio">
+                    <span>Monitor {{ idx + 1 }}</span>
+                    <img class="w-[30vw] h-auto rounded" width="30%" src="{{ url_for('static', filename = monitor) }}" alt="">
+                </label>
+            {% endfor %}
+            <input class="submit hidden" type="submit">
+        </form>
+
+        <script>
+            document.querySelectorAll('label').forEach((elem) => {
+                elem.addEventListener('click', (e) => {
+                    document.querySelector('.submit').click()
+                })
+            })
+        </script>
+    </body>
+</html>
