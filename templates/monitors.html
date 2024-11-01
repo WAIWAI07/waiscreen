@@ -13,7 +13,13 @@
             {% for idx, monitor in monitors %}
                 <label for="monitor-{{ idx }}" class="flex flex-col gap-8 p-8 bg-[#ffffff40] backdrop-blur-md rounded-lg hover:bg-[#ffffff60] hover:cursor-pointer">
                     <input class="hidden" name="monitor" id="monitor-{{ idx }}" value="{{ idx }}" type="radio">
-                    <span>Monitor {{ idx + 1 }}</span>
+                    <span>
+                        {% if idx == 0 %}
+                            All Monitors
+                        {% else %}
+                            Monitor {{ idx }}
+                        {% endif %}
+                    </span>
                     <img class="w-[30vw] h-auto rounded" width="30%" src="{{ url_for('static', filename = monitor) }}" alt="">
                 </label>
             {% endfor %}

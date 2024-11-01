@@ -7,16 +7,26 @@ from mss import mss
 from PIL import Image
 import ctypes
 import socket
-import os
+import os, sys
 
 app = Flask(__name__)
-socketio = SocketIO(app, ping_timeout=5, ping_interval=5)
+socketio = SocketIO(app)
 sct = mss()
 
-selected_monitor = None
+if len(sys.argv) > 1 and '--monitor=' in sys.argv[1]:
+    selected_monitor = sys.argv[1].split('=')[-1]
+    if selected_monitor.isdigit():
+        selected_monitor = int(selected_monitor)
+        print(f"[Server] Selected monitor {selected_monitor}")
+    else:
+        selected_monitor = None
+else:
+    selected_monitor = None
+
 monitors = sct.monitors
 
 active_clients = []
+client_alerts = []
 
 highest_screen_top_pos = 0
 lowest_screen_top_pos = 9999
@@ -43,6 +53,29 @@ for idx, monitor in enumerate(monitors):
     img.save(f"./static/images/screens/screen-{idx}.jpg")
     monitor_images_list.append(f"images/screens/screen-{idx}.jpg")
 
+@app.route('/clientalert', methods=['POST'])
+def client_alert():
+    global selected_monitor
+    # Get the alert status and message
+    status: int = request.json.get('status')
+    msg: str = request.json.get('msg')
+
+    # Add the alert
+    client_alerts.append({
+        "status": status,
+        "msg": msg
+    })
+
+    # Output the alert
+    print(f"[Client Alert] <{status}> {msg}")
+
+    # If the alerts more than 5 times
+    if len(client_alerts) > 5:
+        print("[Server] Received more than 5 client alerts, attempt to restart the server ...")
+        os.execl(sys.executable, sys.executable, *(sys.argv + [f'--monitor={selected_monitor}']))
+
+    return "Alert added"
+
 @app.route('/monitors', methods=['GET', 'POST'])
 def monitors_page():
     if socket.gethostbyname(socket.gethostname()) != request.remote_addr:
@@ -54,7 +87,10 @@ def monitors_page():
         print(f"[Server] Selected monitor {selected_monitor}")
         return redirect('./')
 
-    return render_template('monitors.html', monitors = enumerate(monitor_images_list))
+    monitors_list: list = list(enumerate(monitor_images_list))
+    if len(monitors_list) <= 2:
+        monitors_list: list = [(1, monitors_list[0][1])]
+    return render_template('monitors.html', monitors = monitors_list, is_multi_monitors = len(monitor_images_list) > 2)
 
 @app.route('/')
 def index():
@@ -77,6 +113,7 @@ class MouseCursor:
 
 def screen_capture(remote_addr: str, client_list: list):
     print(f"[Server] Readying to share the screen")
+
     # Initialize the 'mss'
     sct = mss()
     
@@ -158,7 +195,8 @@ def handle_connect():
     remote_addr: str = add_client()
 
     print(f"[Server] Client '{remote_addr}' connected")
-    socketio.start_background_task(target=screen_capture, remote_addr=remote_addr, client_list=active_clients)
+    thread = socketio.start_background_task(target=screen_capture, remote_addr=remote_addr, client_list=active_clients)
+    thread.daemon = True
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -174,4 +212,4 @@ def handle_disconnect():
 if __name__ == '__main__':
     print(f"[Server Started] The server is hosted at 'http://{socket.gethostbyname(socket.gethostname())}'")
     print(f"[Server Started] Press 'Ctrl + C' to stop the server")
-    socketio.run(app, '0.0.0.0', 80, debug=True)
+    socketio.run(app, '0.0.0.0', 80)
