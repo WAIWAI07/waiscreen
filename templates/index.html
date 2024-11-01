@@ -6,12 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="flex flex-col text-white items-center justify-center min-h-[100vh] p-5 font-bold bg-gradient-to-r from-cyan-500 to-blue-500 gap-20">
+<body class="flex flex-col text-white items-center justify-center min-h-[100vh] p-5 font-bold bg-gradient-to-r from-cyan-500 to-blue-500 gap-10">
     <img class="hidden screen-display w-[90vw]">
 
     <span class="connect-tip text-[30px]">Connecting to the host ...</span>
     {% if is_host %}
-        <a class="px-4 py-2 bg-[#ffffff50] text-black rounded-full hover:bg-[#ffffff70]" href="./monitors">Change Monitor</a>
+        <div class="flex justify-center items-center gap-10">
+            <a class="px-4 py-2 bg-[#ffffff50] text-black rounded-full hover:bg-[#ffffff70]" href="./monitors">Change Monitor</a>
+            <button class="shutdown px-4 py-2 bg-[#ffffff50] text-black rounded-full hover:bg-[#ffffff70]">Shutdown</button>
+            <button class="restart px-4 py-2 bg-[#ffffff50] text-black rounded-full hover:bg-[#ffffff70]">Restart</button>
+        </div>
     {% endif %}
 
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
@@ -45,12 +49,20 @@
                     body: JSON.stringify(
                         {
                             "status": 100,
-                            "msg": "Screen lagging alert"
+                            "msg": `Screen lagging alert (From {{ addr }})`
                         }
                     )
-                })
+                });
             }
         });
+
+        document.querySelector('.shutdown').addEventListener('click', () => {
+            fetch('./shutdown', {method: "POST"});
+        })
+
+        document.querySelector('.restart').addEventListener('click', () => {
+            fetch('./restart', {method: "POST"});
+        })
     </script>
 </body>
 </html>
