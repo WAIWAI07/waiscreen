@@ -241,7 +241,7 @@ def handle_connect():
     remote_addr: str = add_client()
 
     print(f"[Server] Client '{remote_addr}' connected")
-    SOCKETIO.start_background_task(target=screen_capture, remote_addr=remote_addr, client_list=active_clients).daemon = False
+    SOCKETIO.start_background_task(target=screen_capture, remote_addr=remote_addr, client_list=active_clients)
 
 @SOCKETIO.on('disconnect')
 def handle_disconnect():
