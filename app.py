@@ -77,6 +77,9 @@ class MouseCursor:
 
 def screen_capture(remote_addr: str, client_list: list):
     print(f"[Server] Readying to share the screen")
+    # Initialize the 'mss'
+    sct = mss()
+    
     # Load cursor images
     cursor_white_image = Image.open('./static/images/cursor-white.png').resize((15, 15))
     cursor_black_image = Image.open('./static/images/cursor-black.png').resize((15, 15))
