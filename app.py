@@ -13,17 +13,17 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 sct = mss()
 
+monitors = sct.monitors
+
 if len(sys.argv) > 1 and '--monitor=' in sys.argv[1]:
     selected_monitor = sys.argv[1].split('=')[-1]
-    if selected_monitor.isdigit():
+    if selected_monitor.isdigit() and int(selected_monitor) < len(monitors):
         selected_monitor = int(selected_monitor)
         print(f"[Server] Selected monitor {selected_monitor}")
     else:
         selected_monitor = None
 else:
     selected_monitor = None
-
-monitors = sct.monitors
 
 active_clients = []
 client_alerts = []
@@ -75,6 +75,13 @@ def client_alert():
         os.execl(sys.executable, sys.executable, *(sys.argv + [f'--monitor={selected_monitor}']))
 
     return "Alert added"
+
+@app.route('/shutdown')
+def shutdown_server():
+    # Check if the client is the host
+    if socket.gethostbyname(socket.gethostname()) == request.remote_addr:
+        print("[Server] Shutting down ...")
+        sys.exit()
 
 @app.route('/monitors', methods=['GET', 'POST'])
 def monitors_page():
@@ -196,7 +203,7 @@ def handle_connect():
 
     print(f"[Server] Client '{remote_addr}' connected")
     thread = socketio.start_background_task(target=screen_capture, remote_addr=remote_addr, client_list=active_clients)
-    thread.daemon = True
+    thread.daemon = False
 
 @socketio.on('disconnect')
 def handle_disconnect():
