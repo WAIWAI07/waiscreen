@@ -111,6 +111,7 @@ def shutdown_server():
 
 @APP.route('/restart', methods = ['POST'])
 def restart_server():
+    global selected_monitor
     # Check if the client is the host
     if socket.gethostbyname(socket.gethostname()) == request.remote_addr:
         print("[Server] Restarting ...")
